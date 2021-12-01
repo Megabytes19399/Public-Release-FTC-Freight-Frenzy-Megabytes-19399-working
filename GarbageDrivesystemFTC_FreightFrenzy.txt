@@ -1,0 +1,136 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+import java.lang.Math;
+
+/**
+ * Team 9960 Revision 161027.0
+ * This program provides driver station control of the Team 9960 Mecanum Drive Prototype.
+ *
+ * This robot uses four VEX Mecanum wheels, each direct driven by Neverest 20 motors.
+ * It is designed as a linear op mode, and uses RUN_WITH_ENCODER motor operation.
+ *
+ * The gamepad1 right joystick is used for translation movement, while the left joystick x-axis controls rotation.
+ *
+ */
+
+@TeleOp(name="Mecanum Proto Manual working", group="Linear Opmode") // @Autonomous(...) is the other common choice
+// @Disabled
+public class Mecanumprotobackup extends LinearOpMode {
+
+ /* Declare OpMode members. */
+ private ElapsedTime runtime = new ElapsedTime();
+ DcMotor leftFrontMotor = null;
+ DcMotor rightFrontMotor = null;
+ DcMotor leftRearMotor = null;
+ DcMotor rightRearMotor = null;
+ DcMotor duckMotor = null;
+ DcMotor armMotor = null;
+ // declare motor speed variables
+ double RF; double LF; double RR; double LR;
+ // declare joystick position variables
+ double X1; double Y1; double X2; double Y2;
+ // operational constants
+ double joyScale = 0.5;
+ double motorMax = 1.0; // Limit motor power to this value for Andymark RUN_USING_ENCODER mode
+ boolean BR; boolean BL;
+ double DP;
+ double arm;
+ double TR; double TL;
+ @Override
+ public void runOpMode() {
+ telemetry.addData("Status", "Initialized");
+ telemetry.update();
+
+ /* Initialize the hardware variables. Note that the strings used here as parameters
+ * to 'get' must correspond to the names assigned during the robot configuration
+ * step (using the FTC Robot Controller app on the phone).
+ */
+ leftFrontMotor = hardwareMap.dcMotor.get("leftFrontMotor");
+ rightFrontMotor = hardwareMap.dcMotor.get("rightFrontMotor");
+ leftRearMotor = hardwareMap.dcMotor.get("leftBackMotor");
+ rightRearMotor = hardwareMap.dcMotor.get("rightBackMotor");
+ duckMotor = hardwareMap.dcMotor.get("duckMotor");
+ armMotor = hardwareMap.dcMotor.get("armMotor");
+
+ // Wait for the game to start (driver presses PLAY)
+ waitForStart();
+ runtime.reset();
+
+ // run until the end of the match (driver presses STOP)
+ while (opModeIsActive()) {
+ telemetry.addData("Status", "Run Time: " + runtime.toString());
+ telemetry.update();
+
+ // Reset speed variables
+ LF = 0; RF = 0; LR = 0; RR = 0;
+
+ // Get joystick values
+ X1 = gamepad1.left_stick_x * joyScale; // invert so up is positive
+ Y1 = -gamepad1.left_stick_y * joyScale;
+ BR = gamepad2.right_bumper;
+ BL = gamepad2.left_bumper;
+ TR = gamepad2.right_trigger;
+ TL = -gamepad2.left_trigger;
+
+ if(Math.abs(X1) > Math.abs(Y1)){
+ Y1 = 0;
+}
+if(Math.abs(Y1) > Math.abs(X1)){
+ X1 = 0;
+}
+
+ if (BR){
+    DP = 1;
+ }
+ else if (BL){
+  DP = -1;
+ }
+ else {
+  DP=0;
+ }
+ 
+ arm = TR + TL;
+
+ // Forward/back movement
+ LF += Y1; RF += Y1; LR += Y1; RR += Y1;
+
+ // Side to side movement
+// LF += X1; RF -= X1; LR -= X1; RR += X1;
+
+ // Rotation movement
+ LF += X1; RF -= X1; LR += X1; RR -=X1;
+
+
+ // Clip motor power values to +-motorMax
+ LF = Math.max(-motorMax, Math.min(LF, motorMax));
+ RF = Math.max(-motorMax, Math.min(RF, motorMax));
+ LR = Math.max(-motorMax, Math.min(LR, motorMax));
+ RR = Math.max(-motorMax, Math.min(RR, motorMax));
+
+ // Send values to the motors
+ leftFrontMotor.setPower(-LF);
+ rightFrontMotor.setPower(RF);
+ leftRearMotor.setPower(-LR);
+ rightRearMotor.setPower(RR);
+ duckMotor.setPower(DP);
+ armMotor.setPower(arm);
+ 
+ 
+ 
+ // Send some useful parameters to the driver station
+ telemetry.addData("LF", "%.3f", LF);
+ telemetry.addData("RF", "%.3f", RF);
+ telemetry.addData("LR", "%.3f", LR);
+ telemetry.addData("RR", "%.3f", RR);
+ telemetry.addData("X1", "%.3f", X1);
+ telemetry.addData("Y1", "%.3f", Y1);
+ }
+ }
+}
